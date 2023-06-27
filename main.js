@@ -1,94 +1,40 @@
-const {
-  autoUpdater,
-  AppUpdater
-} = require('electron-updater');
-
-autoUpdater.autoDownload = false;
-autoUpdater.autoInstallOnAppQuit = true;
-
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
 
-const mongo = require('./mongo');
-const path = require('path');
-const fs = require('fs');
 const {
   app,
   BrowserWindow,
-  Menu,
-  ipcMain
-} = require('electron');
+  ipcMain,
+  ipcRenderer
+} = require("electron");
 
-const isDev = process.env.NODE_ENV !== 'production';
-const isMac = process.platform === 'darwin';
+const {
+  autoUpdater,
+  AppUpdater
+} = require("electron-updater");
+
+const LoginScreen = require("./screens/login/screen");
+const MainScreen = require("./screens/main/screen");
+const Globals = require("./globals");
+const mongo = require('./mongo');
+const fs = require('fs')
 const userDataPath = app.getPath('userData');
 
-let loginWindow;
-let mainWindow;
+let curWindow;
 
-// Login Window
-function createLogInWindow() {
-  loginWindow = new BrowserWindow({
-    center: true,
-    width: 950,
-    height: 500,
-    icon: `${__dirname}/assets/icons/Icon_256x256.png`,
-    resizable: false,
-    movable: false,
-    webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: true,
-      preload: path.join(__dirname, './renderer/login/preload.js'),
-    },
-    frame: false,
-    transparent: true
-  });
+//Basic flags
+autoUpdater.autoDownload = false;
+autoUpdater.autoInstallOnAppQuit = true;
 
-  // Show devtools automatically if in development
-  if (isDev) {
-    setTimeout(() => {
-      // loginWindow.webContents.openDevTools();
-    }, 1000)
+function createWindow(type) {
+  if (type === 'login') {
+    curWindow = new LoginScreen();
+  } else if (type === 'main') {
+    curWindow = new MainScreen();
   }
-
-  loginWindow.loadFile(path.join(__dirname, './renderer/login/index.html'));
-
-  // Remove variable from memory
-  loginWindow.on('closed', () => (loginWindow = null));
 }
 
-// Main Window
-function createMainWindow() {
-  mainWindow = new BrowserWindow({
-    width: 950,
-    height: 500,
-    icon: `${__dirname}/assets/icons/Icon_256x256.png`,
-    show: false,
-    webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: true,
-      preload: path.join(__dirname, './renderer/main/preload.js'),
-    },
-  });
-
-  mainWindow.maximize();
-  mainWindow.show();
-
-  // Show devtools automatically if in development
-  if (isDev) {
-    setTimeout(() => {
-      // mainWindow.webContents.openDevTools();
-    }, 1000)
-  }
-
-  mainWindow.loadFile(path.join(__dirname, './renderer/main/index.html'));
-
-  // Remove variable from memory
-  mainWindow.on('closed', () => (mainWindow = null));
-}
-
-// When the app is ready, create the window
 app.whenReady().then(async () => {
   const data = `{
     "userId": ""
@@ -99,102 +45,53 @@ app.whenReady().then(async () => {
       const userData = require(`${userDataPath}\\userData.json`);
 
       if (userData.userId) {
-        createMainWindow();
-      } else createLogInWindow();
+        createWindow('main');
+      } else createWindow('login');
     } else if (err.code === 'ENOENT') {
       fs.writeFile(`${userDataPath}\\userData.json`, data, function (err) {})
-      createLogInWindow();
+      createWindow('login');
     }
   });
 
+
   await mongo();
-  Menu.setApplicationMenu(null);
+
+  app.on("activate", function () {
+    if (BrowserWindow.getAllWindows().length == 0) createWindow('login');
+  });
 
   autoUpdater.checkForUpdates();
-  showMessage('Checking for updates');
+  curWindow.showMessage(`Checking for updates. Current version ${app.getVersion()}`);
 });
 
-autoUpdater.on('update-available', (info) => {
-  showMessage(`Update available.`);
+/*New Update Available*/
+autoUpdater.on("update-available", (info) => {
+  curWindow.showMessage(`Update available. Current version ${app.getVersion()}`);
   let pth = autoUpdater.downloadUpdate();
-  showMessage(pth);
-})
-
-autoUpdater.on('update-not-available', (info) => {
-  showMessage(`No update available.`);
-  showMessage(pth);
-})
-
-autoUpdater.on('update-downloaded', (info) => {
-  showMessage(`Update downloaded.`);
-})
-
-autoUpdater.on('error', (info) => {
-  showMessage(info)
-})
-
-// Quit when all windows are closed.
-app.on('window-all-closed', () => {
-  if (!isMac) app.quit();
+  curWindow.showMessage(pth);
 });
 
-// Open a window if none are open (macOS)
-app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) createLogInWindow();
+autoUpdater.on("update-not-available", (info) => {
+  curWindow.showMessage(`No update available. Current version ${app.getVersion()}`);
+});
+
+/*Download Completion Message*/
+autoUpdater.on("update-downloaded", (info) => {
+  curWindow.showMessage(`Update downloaded | Please restart app.`);
+});
+
+autoUpdater.on("error", (info) => {
+  curWindow.showMessage(info);
 });
 
 
-const ip = require('ip')
-const cadLogInSchema = require('./mongo/cadLogIn');
-
-ipcMain.on('logIn:create', async () => {
-  await cadLogInSchema.findOneAndUpdate({
-    ip: ip.address()
-  }, {
-    ip: ip.address(),
-    loggedIn: false
-  }, {
-    upsert: true
-  })
-
-  const item = await cadLogInSchema.findOne({
-    ip: ip.address()
-  })
-
-  loginWindow.webContents.send('logIn:done', {
-    id: item._id.toString()
-  })
-})
 
 
-ipcMain.on('logIn:check', async () => {
-  const item = await cadLogInSchema.findOne({
-    ip: ip.address(),
-    loggedIn: true
-  })
+//Global exception handler
+process.on("uncaughtException", function (err) {
+  console.log(err);
+});
 
-  if (item) {
-    const userData = require(`${userDataPath}\\userData.json`);
-    userData.userId = item.userId;
-
-    fs.writeFile(`${userDataPath}\\userData.json`, JSON.stringify(userData, null, 2), function (err) {});
-
-    await cadLogInSchema.findOneAndDelete({
-      ip: ip.address(),
-      loggedIn: true
-    })
-
-    createMainWindow()
-    loginWindow.destroy();
-  } else errorLogIn('Failed to log in')
-})
-
-function errorLogIn(errorMsg) {
-  loginWindow.webContents.send('logIn:error', {
-    errorMsg
-  })
-}
-
-function showMessage(message) {
-  loginWindow.webContents.send("updateMessage", message)
-}
+app.on("window-all-closed", function () {
+  if (process.platform != "darwin") app.quit();
+});

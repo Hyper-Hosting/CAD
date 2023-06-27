@@ -1,3 +1,12 @@
+const loginBtn = document.getElementById('loginBtn');
+const confirmBtn = document.getElementById('confirmBtn');
+const progressBar = document.getElementById('progress-bar');
+
+function updateMessage(message) {
+  let elemE = document.getElementById("message");
+  elemE.innerHTML = message;
+}
+
 function alertSuccess(message) {
   Toastify.toast({
     text: message,
@@ -24,15 +33,16 @@ function alertError(message) {
   });
 }
 
-const loginBtn = document.getElementById('loginBtn');
-const confirmBtn = document.getElementById('confirmBtn');
-const progressBar = document.getElementById('progress-bar');
+document.addEventListener("DOMContentLoaded", function () {
+  ipcRenderer.on("updateMessage", updateMessage)
+});
 
 loginBtn.addEventListener('click', (event) => {
   event.preventDefault();
 
   ipcRenderer.send('logIn:create', {})
   ipcRenderer.on('logIn:done', (json) => {
+    console.log(json.id);
     const url = Process.generateAuthUrl(json.id);
     shell.openExternal(url)
   })
@@ -66,8 +76,4 @@ confirmBtn.addEventListener('click', (event) => {
     progressBar.classList.add('hide');
     loginBtn.classList.remove('hide');
   }, 1500);
-})
-
-ipcRenderer.on('updateMessage', (message) => {
-  document.getElementById('version').innerText = message
 })

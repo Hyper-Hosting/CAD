@@ -1,10 +1,10 @@
 {
   "name": "SALRP-CAD",
-  "productName": "SALRP-CAD",
   "version": "1.0.1",
-  "description": "A CAD system for GTA RP",
+  "description": "CAD system for SALRP GTA RP server",
   "main": "main.js",
   "scripts": {
+    "watch": "nodemon --exec electron .",
     "start": "electron .",
     "dist": "electron-builder"
   },
@@ -17,26 +17,25 @@
     "appId": "com.hyperhostings.autoupdater",
     "productName": "SALRP CAD",
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "./assets/icons/win/icon.ico"
     },
     "directories": {
       "output": "dist"
     }
   },
-  "keywords": [],
   "author": "Hyper Hosting",
   "license": "ISC",
   "devDependencies": {
-    "electron": "^20.3.12",
-    "electron-builder": "^24.4.0"
+    "dotenv": "^16.3.1",
+    "electron": "^19.0.9",
+    "electron-builder": "^23.6.0",
+    "nodemon": "^2.0.19"
   },
   "dependencies": {
     "discord-oauth2": "^2.11.0",
-    "dotenv": "^16.3.1",
-    "electron-updater": "^6.1.1",
+    "electron-updater": "^5.3.0",
     "ip": "^2.0.0",
-    "mongoose": "^6.9.0",
-    "npm": "^9.7.2",
-    "toastify-js": "^1.12.0"
+    "mongoose": "^6.9.0"
   }
 }
