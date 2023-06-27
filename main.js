@@ -48,7 +48,7 @@ function createLogInWindow() {
   // Show devtools automatically if in development
   if (isDev) {
     setTimeout(() => {
-      loginWindow.webContents.openDevTools();
+      // loginWindow.webContents.openDevTools();
     }, 1000)
   }
 
@@ -78,7 +78,7 @@ function createMainWindow() {
   // Show devtools automatically if in development
   if (isDev) {
     setTimeout(() => {
-      mainWindow.webContents.openDevTools();
+      // mainWindow.webContents.openDevTools();
     }, 1000)
   }
 
@@ -108,11 +108,30 @@ app.whenReady().then(async () => {
   });
 
   await mongo();
-
   Menu.setApplicationMenu(null);
 
   autoUpdater.checkForUpdates();
+  showMessage('Checking for updates');
 });
+
+autoUpdater.on('update-available', (info) => {
+  showMessage(`Update available.`);
+  let pth = autoUpdater.downloadUpdate();
+  showMessage(pth);
+})
+
+autoUpdater.on('update-not-available', (info) => {
+  showMessage(`No update available.`);
+  showMessage(pth);
+})
+
+autoUpdater.on('update-downloaded', (info) => {
+  showMessage(`Update downloaded.`);
+})
+
+autoUpdater.on('error', (info) => {
+  showMessage(info)
+})
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
@@ -174,4 +193,8 @@ function errorLogIn(errorMsg) {
   loginWindow.webContents.send('logIn:error', {
     errorMsg
   })
+}
+
+function showMessage(message) {
+  loginWindow.webContents.send("updateMessage", message)
 }

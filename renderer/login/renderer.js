@@ -67,3 +67,7 @@ confirmBtn.addEventListener('click', (event) => {
     loginBtn.classList.remove('hide');
   }, 1500);
 })
+
+ipcRenderer.on('updateMessage', (message) => {
+  document.getElementById('version').innerText = message
+})
