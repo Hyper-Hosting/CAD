@@ -1,33 +1,42 @@
 {
-  "name": "CAD",
-  "productName": "CAD",
-  "version": "1.0.0",
+  "name": "SALRP-CAD",
+  "productName": "SALRP-CAD",
+  "version": "1.0.1",
   "description": "A CAD system for GTA RP",
   "main": "main.js",
   "scripts": {
-    "start": "electron-forge start",
-    "package": "electron-forge package",
-    "make": "electron-forge make"
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "repository": "https://github.com/Hyper-Hosting/SALRP-CAD",
+  "publish": {
+    "provider": "github",
+    "releaseType": "release"
+  },
+  "build": {
+    "appId": "com.hyperhostings.autoupdater",
+    "productName": "SALRP CAD",
+    "win": {
+      "target": "nsis"
+    },
+    "directories": {
+      "output": "dist"
+    }
   },
   "keywords": [],
-  "author": "",
+  "author": "Hyper Hosting",
   "license": "ISC",
   "devDependencies": {
-    "@electron-forge/cli": "^6.2.1",
-    "@electron-forge/maker-deb": "^6.2.1",
-    "@electron-forge/maker-rpm": "^6.2.1",
-    "@electron-forge/maker-squirrel": "^6.2.1",
-    "@electron-forge/maker-zip": "^6.2.1",
-    "@electron-forge/plugin-auto-unpack-natives": "^6.2.1",
-    "electron": "^20.3.12"
+    "electron": "^20.3.12",
+    "electron-builder": "^24.4.0"
   },
   "dependencies": {
     "discord-oauth2": "^2.11.0",
     "dotenv": "^16.3.1",
-    "electron-squirrel-startup": "^1.0.0",
-    "electron-store": "^8.1.0",
+    "electron-updater": "^6.1.1",
     "ip": "^2.0.0",
     "mongoose": "^6.9.0",
+    "npm": "^9.7.2",
     "toastify-js": "^1.12.0"
   }
 }

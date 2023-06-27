@@ -1,3 +1,11 @@
+const {
+  autoUpdater,
+  AppUpdater
+} = require('electron-updater');
+
+autoUpdater.autoDownload = false;
+autoUpdater.autoInstallOnAppQuit = true;
+
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
@@ -81,7 +89,7 @@ function createMainWindow() {
 }
 
 // When the app is ready, create the window
-app.on('ready', async () => {
+app.whenReady().then(async () => {
   const data = `{
     "userId": ""
   }`;
@@ -101,7 +109,9 @@ app.on('ready', async () => {
 
   await mongo();
 
-  Menu.setApplicationMenu(null)
+  Menu.setApplicationMenu(null);
+
+  autoUpdater.checkForUpdates();
 });
 
 // Quit when all windows are closed.
