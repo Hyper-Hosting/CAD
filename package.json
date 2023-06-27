@@ -1,6 +1,6 @@
 {
   "name": "SALRP-CAD",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "CAD system for SALRP GTA RP server",
   "main": "main.js",
   "scripts": {
